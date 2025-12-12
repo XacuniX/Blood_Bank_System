@@ -28,7 +28,7 @@ $is_eligible = false;
 if ($donor_info['Last_Donation_Date']) {
     $last_donation = new DateTime($donor_info['Last_Donation_Date']);
     $next_eligibility = clone $last_donation;
-    $next_eligibility->modify('+56 days');
+    $next_eligibility->modify('+84 days');
     $today = new DateTime();
     $days_until_eligible = $today->diff($next_eligibility)->days;
     $is_eligible = $today >= $next_eligibility;
@@ -48,6 +48,20 @@ $stmt->close();
 ?>
 
 <div class="container mt-5">
+    <!-- Success/Error Messages -->
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    
     <!-- Welcome Header with Logout -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Welcome back, <?php echo htmlspecialchars($donor_info['Name']); ?>!</h2>
@@ -66,7 +80,6 @@ $stmt->close();
                     <?php if ($is_eligible): ?>
                         <h5 class="card-title text-success">✓ Eligible to Donate</h5>
                         <p class="card-text">You can donate blood now!</p>
-                        <a href="schedule_donation.php" class="btn btn-success btn-sm">Schedule Donation</a>
                     <?php else: ?>
                         <h5 class="card-title text-warning">⏳ Not Yet Eligible</h5>
                         <p class="card-text">Next eligibility: <?php echo $next_eligibility->format('M d, Y'); ?></p>
@@ -87,7 +100,6 @@ $stmt->close();
                         <?php echo $donor_info['Last_Donation_Date'] ? date('M d, Y', strtotime($donor_info['Last_Donation_Date'])) : 'Never'; ?>
                     </h5>
                     <p class="card-text">Total Donations: <strong><?php echo $donation_count; ?></strong></p>
-                    <a href="#donation-history" class="btn btn-info btn-sm text-white">View History</a>
                 </div>
             </div>
         </div>
@@ -101,13 +113,22 @@ $stmt->close();
                 <div class="card-body">
                     <p class="mb-2"><strong>Blood Group:</strong>
                         <?php echo htmlspecialchars($donor_info['Blood_Group']); ?></p>
-                    <p class="mb-2"><strong>Phone:</strong> <?php echo htmlspecialchars($donor_info['Phone_Number']); ?>
+                    <p class="mb-2 d-flex justify-content-between align-items-center">
+                        <span><strong>Phone:</strong> <span id="phone-display"><?php echo htmlspecialchars($donor_info['Phone_Number']); ?></span></span>
+                        <a href="#" class="text-primary text-decoration-none" title="Edit Phone Number" onclick="editPhone(); return false;">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </p>
+                    <p class="mb-2 d-flex justify-content-between align-items-center">
+                        <span><strong>Password:</strong> <span id="password-display">••••••••</span></span>
+                        <a href="#" class="text-primary text-decoration-none" title="Edit Password" onclick="editPassword(); return false;">
+                            <i class="bi bi-pencil"></i>
+                        </a>
                     </p>
                     <p class="mb-2"><strong>Age:</strong> <?php echo htmlspecialchars($donor_info['Age'] ?? 'N/A'); ?>
                     </p>
                     <p class="mb-2"><strong>Gender:</strong>
                         <?php echo htmlspecialchars($donor_info['Gender'] ?? 'N/A'); ?></p>
-                    <a href="edit_profile.php" class="btn btn-primary btn-sm">Edit Profile</a>
                 </div>
             </div>
         </div>
@@ -193,6 +214,66 @@ $stmt->close();
         </div>
     </div>
 </div>
+
+<script>
+function editPhone() {
+    const currentPhone = document.getElementById('phone-display').textContent;
+    const newPhone = prompt('Enter new phone number:', currentPhone);
+    if (newPhone && newPhone !== currentPhone) {
+        // Submit to server
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'update_profile.php';
+        
+        const field = document.createElement('input');
+        field.type = 'hidden';
+        field.name = 'field';
+        field.value = 'phone';
+        form.appendChild(field);
+        
+        const value = document.createElement('input');
+        value.type = 'hidden';
+        value.name = 'value';
+        value.value = newPhone;
+        form.appendChild(value);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function editPassword() {
+    const newPassword = prompt('Enter new password (leave blank to cancel):');
+    if (newPassword && newPassword.length >= 6) {
+        const confirmPassword = prompt('Confirm new password:');
+        if (newPassword === confirmPassword) {
+            // Submit to server
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'update_profile.php';
+            
+            const field = document.createElement('input');
+            field.type = 'hidden';
+            field.name = 'field';
+            field.value = 'password';
+            form.appendChild(field);
+            
+            const value = document.createElement('input');
+            value.type = 'hidden';
+            value.name = 'value';
+            value.value = newPassword;
+            form.appendChild(value);
+            
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            alert('Passwords do not match!');
+        }
+    } else if (newPassword && newPassword.length < 6) {
+        alert('Password must be at least 6 characters long!');
+    }
+}
+</script>
 
 <?php
 $conn->close();
