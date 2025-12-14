@@ -1,5 +1,5 @@
 <?php
-include 'session_check.php'; // 1. Run the security check first!
+include 'donor_session_check.php'; // 1. Run the security check first!
 
 // Suppress debug output from db_connect.php
 ob_start();
@@ -223,7 +223,7 @@ function editPhone() {
         // Submit to server
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = 'update_profile.php';
+        form.action = 'donor_update_profile.php';
         
         const field = document.createElement('input');
         field.type = 'hidden';
@@ -250,7 +250,7 @@ function editPassword() {
             // Submit to server
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = 'update_profile.php';
+            form.action = 'donor_update_profile.php';
             
             const field = document.createElement('input');
             field.type = 'hidden';

@@ -12,7 +12,7 @@ Hospital Dashboard:
 Visual: A search bar right in the center: "Find Blood Group."
 Below it: A table of "My Past Requests" showing their status (Pending/Approved).
 
-Search Results Screen: [Use the search.php file here since its useless for now]
+Search Results Screen: [Use the donor_search.php file here since its useless for now]
 Action: Selects "AB-" and clicks "Search."
 Scenario A (Stock Found): Shows "3 Units Available." Button: "Request This Stock".
 Scenario B (No Stock): Shows "Out of Stock." Button: "Create Emergency Request". [Implement later]

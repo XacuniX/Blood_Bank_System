@@ -28,7 +28,7 @@
                     <a class="nav-link" href="/bloodbank/inventory.php">Inventory</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/bloodbank/search.php">Search</a>
+                    <a class="nav-link" href="/bloodbank/donor_search.php">Search</a>
                 </li>
             </ul>
         </div>
