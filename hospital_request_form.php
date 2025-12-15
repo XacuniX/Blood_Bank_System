@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = 'Pending';
         $requestDate = date('Y-m-d H:i:s'); // Current timestamp
         
-        $stmt = $conn->prepare("INSERT INTO Request (Hospital_ID, Required_Blood_Group, Quantity, Urgency, Status, Request_Date) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO Request (Hospital_ID, Required_Blood_Group, Quantity, Urgency_Level, Status, Request_Date) VALUES (?, ?, ?, ?, ?, ?)");
         if ($stmt) {
             $stmt->bind_param("isisss", $hospital_id, $bloodGroup, $quantity, $urgency, $status, $requestDate);
             if ($stmt->execute()) {

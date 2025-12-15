@@ -10,7 +10,7 @@
 
 ## Current Progress
 - **Donor System:** Registration, Login (Phone/Pass), Dashboard (View History, Eligibility Check) are COMPLETE.
-- **Hospital System:** Login page, Search by Blood Group.
+- **Hospital System:** Login page, Search by Blood Group, Requesting Blood Bag as Needed.
 
 ## Coding Rules
 - Use `db_connect.php` for database connections.
