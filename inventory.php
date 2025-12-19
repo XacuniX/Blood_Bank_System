@@ -5,7 +5,9 @@ ob_start();
 include 'db_connect.php';
 ob_end_clean();
 
-$sql = "SELECT * FROM Blood_Unit";
+$sql = "SELECT * FROM Blood_Unit 
+        WHERE NOT (Status = 'Used' OR Status = 'Expired')
+        ORDER BY Collection_Date DESC";
 $result = $conn->query($sql);
 $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 ?>
