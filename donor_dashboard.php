@@ -67,7 +67,7 @@ $stmt->close();
     <!-- Welcome Header with Logout -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Welcome back, <?php echo htmlspecialchars($donor_info['Name']); ?>!</h2>
-        <a href="logout.php" class="btn btn-outline-danger">Logout</a>
+        <a href="donor_logout.php" class="btn btn-outline-danger">Logout</a>
     </div>
 
     <!-- Status Cards Row -->

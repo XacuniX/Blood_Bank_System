@@ -36,10 +36,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("sissss", $name, $age, $gender, $bloodGroup, $phone, $hashedPassword);
                 if ($stmt->execute()) {
                     $donor_id = $conn->insert_id;
-                    $successMessage = "Donor registered successfully.";
                     
                     // Log the registration to audit log
                     log_donor_registration($conn, $donor_id, $name, $bloodGroup);
+                    
+                    // Close connection before redirect
+                    $stmt->close();
+                    $conn->close();
+                    
+                    // Redirect to success page
+                    header("Location: donor_registration_success.php");
+                    exit();
                 } else {
                     $errorMessage = "Failed to register donor: " . $stmt->error;
                 }
