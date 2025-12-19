@@ -17,5 +17,5 @@ if ($conn->connect_error) {
 }
 
 // Optional: Uncomment the line below to test if it works. 
-echo "Connected successfully"; 
+// echo "Connected successfully"; 
 ?>
