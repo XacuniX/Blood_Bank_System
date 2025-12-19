@@ -43,6 +43,7 @@ if ($stmt) {
     <!-- Welcome Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Welcome, <?php echo htmlspecialchars($hospital_name); ?>!</h2>
+        <a href="hospital_logout.php" class="btn btn-outline-danger">Logout</a>
     </div>
 
     <!-- Visual 1: Hero Search Section -->
