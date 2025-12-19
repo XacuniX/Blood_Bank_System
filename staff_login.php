@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("s", $input_user);
                 $stmt->execute();
                 $result = $stmt->get_result();
-                
+
                 if ($result->num_rows > 0) {
                     // Staff member found in database - get the data
                     $staff = $result->fetch_assoc();
@@ -58,8 +58,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $stmt->close();
                             $conn->close();
 
-                            // Redirect to staff dashboard
-                            header("Location: staff_dashboard.php");
+                            // Redirect based on role
+                            $role = $staff['Role'];
+                            if ($role === 'Officer') {
+                                header("Location: staff_officer_dashboard.php");
+                            } elseif ($role === 'Manager') {
+                                header("Location: staff_manager_dashboard.php");
+                            } elseif ($role === 'Admin') {
+                                header("Location: staff_admin_dashboard.php");
+                            } else {
+                                // Default fallback if role doesn't match
+                                header("Location: staff_dashboard.php");
+                            }
                             exit();
                         } else {
                             // Wrong password
