@@ -18,18 +18,6 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" aria-current="page" href="/bloodbank/index.php">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/bloodbank/add_donor.php">Add Donor</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/bloodbank/inventory.php">Inventory</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/bloodbank/donor_search.php">Search</a>
-                </li>
             </ul>
         </div>
     </div>
