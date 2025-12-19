@@ -19,47 +19,93 @@ $errorMessage = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
     $donor_id = trim($_POST['donor_id'] ?? '');
     $expiry_date = trim($_POST['expiry_date'] ?? '');
+    $quantity = intval($_POST['quantity'] ?? 1);
     
-    if (!empty($donor_id) && !empty($expiry_date)) {
-        // Check if Donor_ID exists and get blood group
-        $check_donor_sql = "SELECT Donor_ID, Blood_Group FROM donor WHERE Donor_ID = ?";
+    if (!empty($donor_id) && !empty($expiry_date) && $quantity > 0 && $quantity <= 10) {
+        // Check if Donor_ID exists and get blood group and last donation date
+        $check_donor_sql = "SELECT Donor_ID, Blood_Group, Last_Donation_Date FROM donor WHERE Donor_ID = ?";
         $stmt = $conn->prepare($check_donor_sql);
         $stmt->bind_param("i", $donor_id);
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($result->num_rows > 0) {
-            // Donor exists - get blood group
+            // Donor exists - get blood group and check eligibility
             $donor = $result->fetch_assoc();
             $blood_group = $donor['Blood_Group'];
+            $last_donation = $donor['Last_Donation_Date'];
             
-            // Insert new blood unit
-            $status = 'Available';
+            // Check if donor is eligible (56 days between donations)
+            $eligible = true;
+            $days_remaining = 0;
             
-            // Notice we use the SQL function NOW() instead of a PHP variable (?)
-            $insert_sql = "INSERT INTO blood_unit (Donor_ID, Blood_Group, Expiry_Date, Collection_Date, Status, Staff_ID) 
-                          VALUES (?, ?, ?, NOW(), ?, ?)";
-            $insert_stmt = $conn->prepare($insert_sql);
-            
-            if ($insert_stmt) {
-                $staff_id = $_SESSION['staff_id'];
-                $insert_stmt->bind_param("isssi", $donor_id, $blood_group, $expiry_date, $status, $staff_id);
+            if (!empty($last_donation)) {
+                $last_donation_timestamp = strtotime($last_donation);
+                $today_timestamp = time();
+                $days_since_last_donation = floor(($today_timestamp - $last_donation_timestamp) / (60 * 60 * 24));
                 
-                if ($insert_stmt->execute()) {
-                    $successMessage = "Blood unit added successfully! Unit ID: " . $insert_stmt->insert_id;
-                } else {
-                    $errorMessage = "Error adding blood unit: " . $insert_stmt->error;
+                if ($days_since_last_donation < 56) {
+                    $eligible = false;
+                    $days_remaining = 56 - $days_since_last_donation;
                 }
-                $insert_stmt->close();
+            }
+            
+            if (!$eligible) {
+                $next_eligible_date = date('Y-m-d', strtotime($last_donation . ' + 56 days'));
+                $errorMessage = "Donor is not eligible to donate yet. Last donation was on " . date('Y-m-d', strtotime($last_donation)) . ". Next eligible date: $next_eligible_date ($days_remaining days remaining).";
             } else {
-                $errorMessage = "Database error: " . $conn->error;
+                // Insert new blood units based on quantity
+                $status = 'Available';
+                $staff_id = $_SESSION['staff_id'];
+                
+                // Notice we use the SQL function NOW() instead of a PHP variable (?)
+                $insert_sql = "INSERT INTO blood_unit (Donor_ID, Blood_Group, Expiry_Date, Collection_Date, Status, Staff_ID) 
+                              VALUES (?, ?, ?, NOW(), ?, ?)";
+                $insert_stmt = $conn->prepare($insert_sql);
+                
+                if ($insert_stmt) {
+                    $inserted_units = [];
+                    $success_count = 0;
+                    
+                    // Loop to insert multiple units
+                    for ($i = 0; $i < $quantity; $i++) {
+                        $insert_stmt->bind_param("isssi", $donor_id, $blood_group, $expiry_date, $status, $staff_id);
+                        
+                        if ($insert_stmt->execute()) {
+                            $inserted_units[] = $insert_stmt->insert_id;
+                            $success_count++;
+                        } else {
+                            $errorMessage = "Error adding blood unit: " . $insert_stmt->error;
+                            break;
+                        }
+                    }
+                    
+                    if ($success_count > 0) {
+                        // Update donor's last donation date
+                        $update_donor_sql = "UPDATE donor SET Last_Donation_Date = NOW() WHERE Donor_ID = ?";
+                        $update_stmt = $conn->prepare($update_donor_sql);
+                        $update_stmt->bind_param("i", $donor_id);
+                        $update_stmt->execute();
+                        $update_stmt->close();
+                        
+                        if ($success_count == 1) {
+                            $successMessage = "Blood unit added successfully! Unit ID: " . $inserted_units[0];
+                        } else {
+                            $successMessage = "$success_count blood units added successfully! Unit IDs: " . implode(", ", $inserted_units);
+                        }
+                    }
+                    
+                    $insert_stmt->close();
+                } else {
+                    $errorMessage = "Database error: " . $conn->error;
+                }
             }
         } else {
             $errorMessage = "Donor ID not found. Please verify the Donor ID and try again.";
         }
         $stmt->close();
     } else {
-        $errorMessage = "Please fill in all fields.";
+        $errorMessage = "Please fill in all fields correctly. Quantity must be between 1 and 10.";
     }
 }
 
@@ -144,6 +190,13 @@ include 'includes/header.php';
                             <input type="date" class="form-control" id="expiry_date" name="expiry_date" 
                                    min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" required>
                             <div class="form-text">Blood units typically expire 35-42 days after donation.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" 
+                                   min="1" max="10" value="1" required>
+                            <div class="form-text">Number of blood units to add (1-10).</div>
                         </div>
 
                         <div class="d-grid">
