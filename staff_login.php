@@ -8,9 +8,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input_user = trim($_POST['username'] ?? '');
     // Get password directly - don't process it yet (passwords may have spaces)
     $input_password = $_POST['password'] ?? '';
-    
-    // Debug: Check what's in POST
-    $errorMessage = 'DEBUG POST: username="' . htmlspecialchars($input_user) . '" | password="' . htmlspecialchars($input_password) . '" | password_exists=' . (isset($_POST['password']) ? 'YES' : 'NO') . ' | password_length=' . strlen($input_password);
 
     if (!empty($input_user) && !empty($input_password)) {
         // Connect to DB
@@ -29,9 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Staff member found in database - get the data
                     $staff = $result->fetch_assoc();
                     
-                    // Debug: Show what we got from database
-                    $errorMessage .= ' | Debug: Found user. Password in DB: ' . substr($staff['Password'], 0, 10) . '... | Input: ' . $input_password;
-
                     // Get the stored password from database
                     $storedPassword = $staff['Password'];
 
@@ -73,12 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit();
                         } else {
                             // Wrong password
-                            //$errorMessage = 'Invalid Username or Password.';
+                            $errorMessage = 'Invalid Username or Password.';
                         }
                     }
                 } else {
                     // Staff does not exist
-                    $errorMessage = 'Invalid Username or Password. Username entered: ' . htmlspecialchars($input_user);
+                    $errorMessage = 'Invalid Username or Password.';
                 }
                 $stmt->close();
             } else {
