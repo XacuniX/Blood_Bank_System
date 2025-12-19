@@ -27,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Connect to DB (suppress debug echo from db_connect.php)
         ob_start();
         include 'db_connect.php';
-        include 'audit_logger.php';
         ob_end_clean();
 
         if ($conn instanceof mysqli && !$conn->connect_error) {
@@ -36,9 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("sissss", $name, $age, $gender, $bloodGroup, $phone, $hashedPassword);
                 if ($stmt->execute()) {
                     $donor_id = $conn->insert_id;
-                    
-                    // Log the registration to audit log
-                    log_donor_registration($conn, $donor_id, $name, $bloodGroup);
                     
                     // Close connection before redirect
                     $stmt->close();
