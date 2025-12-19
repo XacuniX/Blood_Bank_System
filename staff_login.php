@@ -5,11 +5,14 @@ $errorMessage = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get the submitted username and password
-    $username = trim($_POST['username'] ?? '');
+    $input_user = trim($_POST['username'] ?? '');
     // Get password directly - don't process it yet (passwords may have spaces)
-    $password = $_POST['password'] ?? '';
+    $input_password = $_POST['password'] ?? '';
+    
+    // Debug: Check what's in POST
+    $errorMessage = 'DEBUG POST: username="' . htmlspecialchars($input_user) . '" | password="' . htmlspecialchars($input_password) . '" | password_exists=' . (isset($_POST['password']) ? 'YES' : 'NO') . ' | password_length=' . strlen($input_password);
 
-    if (!empty($username) && !empty($password)) {
+    if (!empty($input_user) && !empty($input_password)) {
         // Connect to DB
         include 'db_connect.php';
 
@@ -18,16 +21,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Note: MySQL table names are case-sensitive on Linux but not on Windows
             $stmt = $conn->prepare("SELECT Staff_ID, Username, Password, Role FROM Staff WHERE Username = ?");
             if ($stmt) {
-                $stmt->bind_param("s", $username);
+                $stmt->bind_param("s", $input_user);
                 $stmt->execute();
                 $result = $stmt->get_result();
-
+                
                 if ($result->num_rows > 0) {
                     // Staff member found in database - get the data
                     $staff = $result->fetch_assoc();
                     
                     // Debug: Show what we got from database
-                    // $errorMessage = 'Debug: Found user. Password in DB: ' . substr($staff['Password'], 0, 10) . '... | Input: ' . $password;
+                    $errorMessage .= ' | Debug: Found user. Password in DB: ' . substr($staff['Password'], 0, 10) . '... | Input: ' . $input_password;
 
                     // Get the stored password from database
                     $storedPassword = $staff['Password'];
@@ -40,10 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Check if password is hashed or plain text
                         if (preg_match('/^\$2[ayb]\$/', $storedPassword)) {
                             // Password is hashed - use password_verify
-                            $passwordMatch = password_verify($password, $storedPassword);
+                            $passwordMatch = password_verify($input_password, $storedPassword);
                         } else {
                             // Password is plain text - direct comparison
-                            $passwordMatch = ($password === $storedPassword);
+                            $passwordMatch = ($input_password === $storedPassword);
                         }
 
                         if ($passwordMatch) {
@@ -60,12 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit();
                         } else {
                             // Wrong password
-                            $errorMessage = 'Invalid Username or Password.';
+                            //$errorMessage = 'Invalid Username or Password.';
                         }
                     }
                 } else {
                     // Staff does not exist
-                    $errorMessage = 'Invalid Username or Password. Username entered: ' . htmlspecialchars($username);
+                    $errorMessage = 'Invalid Username or Password. Username entered: ' . htmlspecialchars($input_user);
                 }
                 $stmt->close();
             } else {
@@ -77,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $errorMessage = 'Database connection failed. ' . (isset($conn) ? 'Connection error: ' . $conn->connect_error : 'No connection object');
         }
-    } elseif (empty($username)) {
+    } elseif (empty($input_user)) {
         $errorMessage = 'Please enter your username.';
     } else {
         $errorMessage = 'Please enter your password.';
