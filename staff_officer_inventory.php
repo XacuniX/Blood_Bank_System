@@ -64,17 +64,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
 }
 
 // Handle Discard/Delete Action
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_unit'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_btn'])) {
     $unit_id = $_POST['unit_id'] ?? '';
     
     if (!empty($unit_id)) {
-        // Update status to 'Discarded' instead of deleting
-        $discard_sql = "UPDATE blood_unit SET Status = 'Discarded' WHERE Unit_ID = ?";
-        $stmt = $conn->prepare($discard_sql);
+        // Delete the blood unit from database
+        $delete_sql = "DELETE FROM blood_unit WHERE Unit_ID = ?";
+        $stmt = $conn->prepare($delete_sql);
         $stmt->bind_param("i", $unit_id);
         
         if ($stmt->execute()) {
-            $successMessage = "Blood unit #$unit_id has been discarded.";
+            $successMessage = "Blood unit #$unit_id has been discarded and removed from inventory.";
         } else {
             $errorMessage = "Error discarding blood unit: " . $stmt->error;
         }
@@ -83,9 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_unit'])) {
 }
 
 // Get all blood units for display
-$blood_units_sql = "SELECT Unit_ID, Blood_Group, Donor_ID, Donation_Date, Expiry_Date, Status 
+$blood_units_sql = "SELECT Unit_ID, Blood_Group, Donor_ID, Collection_Date, Expiry_Date, Status 
                     FROM blood_unit 
-                    ORDER BY Donation_Date DESC";
+                    ORDER BY Expiry_Date ASC";
 $blood_units = $conn->query($blood_units_sql);
 
 include 'includes/header.php';
@@ -165,6 +165,76 @@ include 'includes/header.php';
                         <li class="mb-2">Verify donor ID before adding blood units</li>
                         <li>Blood typically expires 35-42 days after donation</li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- Current Blood Stock Section -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Current Blood Stock</h5>
+                </div>
+                <div class="card-body">
+                    <?php if ($blood_units && $blood_units->num_rows > 0): ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Unit ID</th>
+                                        <th>Blood Group</th>
+                                        <th>Donor ID</th>
+                                        <th>Collection Date</th>
+                                        <th>Expiry Date</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php while ($row = $blood_units->fetch_assoc()): ?>
+                                        <tr>
+                                            <td><strong><?php echo htmlspecialchars($row['Unit_ID']); ?></strong></td>
+                                            <td>
+                                                <span class="badge bg-danger">
+                                                    <?php echo htmlspecialchars($row['Blood_Group']); ?>
+                                                </span>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($row['Donor_ID']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['Collection_Date'] ?? 'N/A'); ?></td>
+                                            <td><?php echo htmlspecialchars($row['Expiry_Date']); ?></td>
+                                            <td>
+                                                <?php 
+                                                $status = strtolower($row['Status']);
+                                                $badgeClass = match ($status) {
+                                                    'available' => 'text-bg-success',
+                                                    'used' => 'text-bg-info',
+                                                    'expired' => 'text-bg-danger',
+                                                    'discarded' => 'text-bg-dark',
+                                                    default => 'text-bg-secondary',
+                                                };
+                                                ?>
+                                                <span class="badge <?php echo $badgeClass; ?>">
+                                                    <?php echo htmlspecialchars($row['Status']); ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <form method="POST" action="" style="display: inline;" 
+                                                      onsubmit="return confirm('Are you sure you want to discard this blood unit? This action cannot be undone.');">
+                                                    <input type="hidden" name="unit_id" value="<?php echo $row['Unit_ID']; ?>">
+                                                    <button type="submit" name="discard_btn" class="btn btn-sm btn-danger">
+                                                        <i class="bi bi-trash me-1"></i>Discard
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2 mb-0">No blood units in inventory yet.</p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
