@@ -38,9 +38,9 @@ $low_stock_result = $conn->query($low_stock_sql);
 $low_stock_count = $low_stock_result->num_rows;
 
 // Get recent activity (last 5 blood units added)
-$recent_activity_sql = "SELECT Unit_ID, Blood_Group, Donation_Date, Expiry_Date, Status 
+$recent_activity_sql = "SELECT Unit_ID, Blood_Group, Collection_Date, Expiry_Date, Status 
                         FROM blood_unit 
-                        ORDER BY Donation_Date DESC 
+                        ORDER BY Collection_Date DESC 
                         LIMIT 5";
 $recent_activity = $conn->query($recent_activity_sql);
 
@@ -118,7 +118,7 @@ $recent_activity = $conn->query($recent_activity_sql);
                                         <tr>
                                             <td><?php echo htmlspecialchars($row['Unit_ID']); ?></td>
                                             <td><span class="badge bg-danger"><?php echo htmlspecialchars($row['Blood_Group']); ?></span></td>
-                                            <td><?php echo htmlspecialchars($row['Donation_Date']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['Collection_Date']); ?></td>
                                             <td><?php echo htmlspecialchars($row['Expiry_Date']); ?></td>
                                             <td>
                                                 <?php 
