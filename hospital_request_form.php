@@ -1,5 +1,6 @@
 <?php
 include 'hospital_session_check.php'; // 1. Run the security check first!
+require 'audit_logger.php';
 
 // Suppress debug output from db_connect.php
 ob_start();
@@ -40,6 +41,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!in_array($urgency, ['Normal', 'Critical'])) {
         $errorMessage = 'Please select a valid urgency level.';
     } else {
+        // Fetch hospital name for audit logging
+        $hospital_name = 'Unknown';
+        $name_stmt = $conn->prepare("SELECT Name FROM Hospital WHERE Hospital_ID = ?");
+        if ($name_stmt) {
+            $name_stmt->bind_param("i", $hospital_id);
+            $name_stmt->execute();
+            $name_result = $name_stmt->get_result();
+            if ($name_result->num_rows > 0) {
+                $hospital_data = $name_result->fetch_assoc();
+                $hospital_name = $hospital_data['Name'];
+            }
+            $name_stmt->close();
+        }
+        
         // Insert into Request table
         $status = 'Pending';
         $requestDate = date('Y-m-d H:i:s'); // Current timestamp
@@ -50,6 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->execute()) {
                 $requestId = $conn->insert_id; // Get the auto-generated Request_ID
                 $successMessage = "Request Submitted Successfully. ID: #{$requestId}";
+                
+                // Log the request creation activity
+                $details = "Blood request created: {$bloodGroup}, Qty: {$quantity}, Urgency: {$urgency}";
+                log_activity($conn, $hospital_name, 'Hospital', 'INSERT', 'Request', $requestId, $details);
             } else {
                 $errorMessage = 'Failed to submit request: ' . $stmt->error;
             }

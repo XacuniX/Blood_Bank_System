@@ -1,4 +1,7 @@
-<?php include 'includes/header.php'; ?>
+<?php 
+require 'audit_logger.php';
+include 'includes/header.php'; 
+?>
 <?php
 $successMessage = '';
 $errorMessage = '';
@@ -35,6 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("sissss", $name, $age, $gender, $bloodGroup, $phone, $hashedPassword);
                 if ($stmt->execute()) {
                     $donor_id = $conn->insert_id;
+                    
+                    // Log the registration activity
+                    log_activity($conn, $name, 'Donor', 'INSERT', 'Donor', $donor_id, 'Self-registration');
                     
                     // Close connection before redirect
                     $stmt->close();
@@ -132,3 +138,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <?php include 'includes/footer.php'; ?>
+
+log_activity($conn, 'New User', 'Donor', 'INSERT', 'Donor', $new_id, 'Self-registration')

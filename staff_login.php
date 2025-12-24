@@ -1,4 +1,5 @@
 <?php
+require 'audit_logger.php';
 session_start();
 
 $errorMessage = '';
@@ -48,6 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $_SESSION['staff_id'] = $staff['Staff_ID'];
                             $_SESSION['username'] = $staff['Username'];
                             $_SESSION['role'] = $staff['Role'];
+
+                            // Log the login activity
+                            log_activity($conn, $staff['Username'], 'Staff', 'LOGIN', 'Staff', $staff['Staff_ID'], 'User logged in');
 
                             $stmt->close();
                             $conn->close();

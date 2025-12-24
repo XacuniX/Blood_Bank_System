@@ -1,4 +1,5 @@
 <?php
+require 'audit_logger.php';
 include 'staff_session_check.php';
 
 // Check if user is an Officer
@@ -81,12 +82,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
                     }
                     
                     if ($success_count > 0) {
+                        // Get donor name for audit logging
+                        $donor_name = 'Unknown';
+                        $name_stmt = $conn->prepare("SELECT Name FROM donor WHERE Donor_ID = ?");
+                        if ($name_stmt) {
+                            $name_stmt->bind_param("i", $donor_id);
+                            $name_stmt->execute();
+                            $name_result = $name_stmt->get_result();
+                            if ($name_result->num_rows > 0) {
+                                $name_data = $name_result->fetch_assoc();
+                                $donor_name = $name_data['Name'];
+                            }
+                            $name_stmt->close();
+                        }
+                        
                         // Update donor's last donation date
                         $update_donor_sql = "UPDATE donor SET Last_Donation_Date = NOW() WHERE Donor_ID = ?";
                         $update_stmt = $conn->prepare($update_donor_sql);
                         $update_stmt->bind_param("i", $donor_id);
                         $update_stmt->execute();
                         $update_stmt->close();
+                        
+                        // Log donor update activity
+                        $donor_update_details = "Donor last donation date updated for {$donor_name} (ID: {$donor_id})";
+                        log_activity($conn, $_SESSION['username'], 'Staff', 'UPDATE', 'Donor', $donor_id, $donor_update_details);
+                        
+                        // Log blood unit addition activity
+                        $unit_details = "Added {$success_count} blood unit(s) - Blood Group: {$blood_group}, Donor: {$donor_name} (ID: {$donor_id})";
+                        log_activity($conn, $_SESSION['username'], 'Staff', 'INSERT', 'Blood_Unit', $inserted_units[0], $unit_details);
                         
                         if ($success_count == 1) {
                             $successMessage = "Blood unit added successfully! Unit ID: " . $inserted_units[0];
@@ -114,6 +137,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_btn'])) {
     $unit_id = $_POST['unit_id'] ?? '';
     
     if (!empty($unit_id)) {
+        // Fetch blood unit details for audit logging
+        $blood_group = 'Unknown';
+        $donor_id_log = 'Unknown';
+        $unit_status = 'Unknown';
+        $fetch_stmt = $conn->prepare("SELECT Blood_Group, Donor_ID, Status FROM blood_unit WHERE Unit_ID = ?");
+        if ($fetch_stmt) {
+            $fetch_stmt->bind_param("i", $unit_id);
+            $fetch_stmt->execute();
+            $fetch_result = $fetch_stmt->get_result();
+            if ($fetch_result->num_rows > 0) {
+                $unit_data = $fetch_result->fetch_assoc();
+                $blood_group = $unit_data['Blood_Group'];
+                $donor_id_log = $unit_data['Donor_ID'];
+                $unit_status = $unit_data['Status'];
+            }
+            $fetch_stmt->close();
+        }
+        
         // Delete the blood unit from database
         $delete_sql = "DELETE FROM blood_unit WHERE Unit_ID = ?";
         $stmt = $conn->prepare($delete_sql);
@@ -121,6 +162,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_btn'])) {
         
         if ($stmt->execute()) {
             $successMessage = "Blood unit #$unit_id has been discarded and removed from inventory.";
+            
+            // Log blood unit discard activity
+            $discard_details = "Blood unit discarded - Unit ID: {$unit_id}, Blood Group: {$blood_group}, Donor ID: {$donor_id_log}, Status: {$unit_status}";
+            log_activity($conn, $_SESSION['username'], 'Staff', 'DELETE', 'Blood_Unit', $unit_id, $discard_details);
         } else {
             $errorMessage = "Error discarding blood unit: " . $stmt->error;
         }

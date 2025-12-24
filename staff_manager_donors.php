@@ -1,4 +1,5 @@
 <?php
+require 'audit_logger.php';
 include 'staff_session_check.php';
 
 // Check if user is a Manager
@@ -36,6 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_donor'])) {
         
         if ($update_stmt->execute()) {
             $successMessage = "Donor updated successfully!";
+            
+            // Log the donor update activity
+            $details = !empty($password) ? "Donor profile updated (including password): Name={$name}" : "Donor profile updated: Name={$name}";
+            log_activity($conn, $_SESSION['username'], 'Staff', 'UPDATE', 'Donor', $donor_id, $details);
         } else {
             $errorMessage = "Error updating donor: " . $update_stmt->error;
         }
@@ -62,6 +67,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_donor'])) {
         if ($count > 0) {
             $errorMessage = "Cannot delete donor. This donor has $count blood unit(s) in the system. Please remove or reassign those units first.";
         } else {
+            // Fetch donor details for audit logging
+            $donor_name = 'Unknown';
+            $donor_blood_group = 'Unknown';
+            $fetch_stmt = $conn->prepare("SELECT Name, Blood_Group FROM donor WHERE Donor_ID = ?");
+            $fetch_stmt->bind_param("i", $donor_id);
+            $fetch_stmt->execute();
+            $fetch_result = $fetch_stmt->get_result();
+            if ($fetch_result->num_rows > 0) {
+                $donor_data = $fetch_result->fetch_assoc();
+                $donor_name = $donor_data['Name'];
+                $donor_blood_group = $donor_data['Blood_Group'];
+            }
+            $fetch_stmt->close();
+            
             // Safe to delete
             $delete_sql = "DELETE FROM donor WHERE Donor_ID = ?";
             $delete_stmt = $conn->prepare($delete_sql);
@@ -69,6 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_donor'])) {
             
             if ($delete_stmt->execute()) {
                 $successMessage = "Donor deleted successfully.";
+                
+                // Log the donor deletion activity
+                $details = "Donor deleted: Name={$donor_name}, Blood Group={$donor_blood_group}";
+                log_activity($conn, $_SESSION['username'], 'Staff', 'DELETE', 'Donor', $donor_id, $details);
             } else {
                 $errorMessage = "Error deleting donor: " . $delete_stmt->error;
             }

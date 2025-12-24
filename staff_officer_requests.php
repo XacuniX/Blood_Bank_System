@@ -1,4 +1,5 @@
 <?php
+require 'audit_logger.php';
 include 'staff_session_check.php';
 
 // Check if user is an Officer
@@ -20,12 +21,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reject_request'])) {
     $request_id = $_POST['request_id'] ?? '';
     
     if (!empty($request_id)) {
+        // Fetch request details for audit logging
+        $hospital_name = 'Unknown';
+        $blood_group = 'Unknown';
+        $quantity_log = 0;
+        $fetch_stmt = $conn->prepare("SELECT h.Hospital_Name, r.Required_Blood_Group, r.Quantity FROM request r JOIN hospital h ON r.Hospital_ID = h.Hospital_ID WHERE r.Request_ID = ?");
+        if ($fetch_stmt) {
+            $fetch_stmt->bind_param("i", $request_id);
+            $fetch_stmt->execute();
+            $fetch_result = $fetch_stmt->get_result();
+            if ($fetch_result->num_rows > 0) {
+                $req_data = $fetch_result->fetch_assoc();
+                $hospital_name = $req_data['Hospital_Name'];
+                $blood_group = $req_data['Required_Blood_Group'];
+                $quantity_log = $req_data['Quantity'];
+            }
+            $fetch_stmt->close();
+        }
+        
         $reject_sql = "UPDATE request SET Status = 'Rejected' WHERE Request_ID = ?";
         $stmt = $conn->prepare($reject_sql);
         $stmt->bind_param("i", $request_id);
         
         if ($stmt->execute()) {
             $successMessage = "Request #$request_id has been rejected.";
+            
+            // Log request rejection activity
+            $reject_details = "Request rejected - Hospital: {$hospital_name}, Blood Group: {$blood_group}, Quantity: {$quantity_log}";
+            log_activity($conn, $_SESSION['username'], 'Staff', 'UPDATE', 'Request', $request_id, $reject_details);
         } else {
             $errorMessage = "Error rejecting request: " . $stmt->error;
         }
@@ -59,12 +82,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_request'])) {
             if ($available_units >= $quantity) {
                 // Enough stock - proceed with approval
                 
+                // Fetch hospital name for audit logging
+                $hospital_name = 'Unknown';
+                $fetch_hospital_stmt = $conn->prepare("SELECT h.Hospital_Name FROM request r JOIN hospital h ON r.Hospital_ID = h.Hospital_ID WHERE r.Request_ID = ?");
+                if ($fetch_hospital_stmt) {
+                    $fetch_hospital_stmt->bind_param("i", $request_id);
+                    $fetch_hospital_stmt->execute();
+                    $fetch_hospital_result = $fetch_hospital_stmt->get_result();
+                    if ($fetch_hospital_result->num_rows > 0) {
+                        $hospital_data = $fetch_hospital_result->fetch_assoc();
+                        $hospital_name = $hospital_data['Hospital_Name'];
+                    }
+                    $fetch_hospital_stmt->close();
+                }
+                
                 // Update request status to 'Approved'
                 $approve_sql = "UPDATE request SET Status = 'Approved' WHERE Request_ID = ?";
                 $stmt = $conn->prepare($approve_sql);
                 $stmt->bind_param("i", $request_id);
                 $stmt->execute();
                 $stmt->close();
+                
+                // Log request approval activity
+                $approve_details = "Request approved - Hospital: {$hospital_name}, Blood Group: {$required_blood_group}, Quantity: {$quantity}";
+                log_activity($conn, $_SESSION['username'], 'Staff', 'UPDATE', 'Request', $request_id, $approve_details);
                 
                 // Mark the oldest units as 'Used' (FIFO method)
                 $update_units_sql = "UPDATE blood_unit 
@@ -76,6 +117,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_request'])) {
                 if ($stmt) {
                     $stmt->bind_param("si", $required_blood_group, $quantity);
                     $stmt->execute();
+                    
+                    // Log blood unit usage activity
+                    $usage_details = "Blood units marked as Used - Blood Group: {$required_blood_group}, Quantity: {$quantity}, For Hospital: {$hospital_name}";
+                    log_activity($conn, $_SESSION['username'], 'Staff', 'UPDATE', 'Blood_Unit', $request_id, $usage_details);
+                    
                     $stmt->close();
                 } else {
                     throw new Exception("Error preparing update query: " . $conn->error);

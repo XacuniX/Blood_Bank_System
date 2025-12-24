@@ -9,10 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get password directly - don't process it yet (passwords may have spaces)
     $password = $_POST['password'] ?? '';
     
-    // Debug: Check what we received
-    if (empty($password)) {
-        $errorMessage = 'Debug: Password field is empty. POST keys: ' . implode(', ', array_keys($_POST)) . ' | Password value: [' . var_export($password, true) . ']';
-    } elseif (!empty($phoneNumber) && !empty($password)) {
+    if (!empty($phoneNumber) && !empty($password)) {
         // Connect to DB (suppress debug echo from db_connect.php)
         ob_start();
         include 'db_connect.php';
@@ -55,8 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Check if password is NULL or empty
                     if ($storedPassword === null || $storedPassword === '') {
                         $errorMessage = 'Password not set for this account. Please contact administrator.';
-                        // Debug: Show available columns to help diagnose
-                        $errorMessage .= ' Available columns: ' . implode(', ', array_keys($donor));
                     } else {
                         // Verify password - check if it's hashed (starts with $2y$, $2a$, $2b$) or plain text
                         $passwordMatch = false;
@@ -64,9 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Get password directly from POST to ensure we have the actual submitted value
                         $inputPassword = $_POST['password'] ?? '';
                         
-                        // Debug: Check what we have
                         if (empty($inputPassword)) {
-                            $errorMessage = 'Password not received from form. POST keys: ' . implode(', ', array_keys($_POST));
+                            $errorMessage = 'Please enter your password.';
                         } else {
                             if (preg_match('/^\$2[ayb]\$/', $storedPassword)) {
                                 // Password is hashed, use password_verify
@@ -88,8 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             } else {
                                 // Password does not match
                                 $errorMessage = 'Invalid Phone Number or Password.';
-                                // Debug: Show comparison details to help diagnose
-                                $errorMessage .= ' (Input length: ' . strlen($inputPassword) . ', Stored length: ' . strlen($storedPassword) . ', First 5 chars match: ' . (substr($inputPassword, 0, 5) === substr($storedPassword, 0, 5) ? 'yes' : 'no') . ')';
                             }
                         }
                     }

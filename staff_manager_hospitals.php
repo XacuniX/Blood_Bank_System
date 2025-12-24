@@ -1,4 +1,5 @@
 <?php
+require 'audit_logger.php';
 include 'staff_session_check.php';
 
 // Check if user is a Manager
@@ -43,7 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_hospital'])) {
             $insert_stmt->bind_param("sssss", $hospital_name, $location, $contact_email, $phone, $hashed_password);
             
             if ($insert_stmt->execute()) {
+                $new_hospital_id = $conn->insert_id;
                 $successMessage = "Hospital '$hospital_name' registered successfully!";
+                
+                // Log the hospital registration activity
+                $details = "Hospital registered: Name={$hospital_name}, Location={$location}";
+                log_activity($conn, $_SESSION['username'], 'Staff', 'INSERT', 'Hospital', $new_hospital_id, $details);
             } else {
                 $errorMessage = "Error registering hospital: " . $insert_stmt->error;
             }
@@ -91,6 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_hospital'])) {
             
             if ($update_stmt->execute()) {
                 $successMessage = "Hospital updated successfully!";
+                
+                // Log the hospital update activity
+                $details = !empty($password) ? "Hospital updated (including password): Name={$hospital_name}" : "Hospital updated: Name={$hospital_name}";
+                log_activity($conn, $_SESSION['username'], 'Staff', 'UPDATE', 'Hospital', $hospital_id, $details);
             } else {
                 $errorMessage = "Error updating hospital: " . $update_stmt->error;
             }
@@ -106,12 +116,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_hospital'])) {
     $hospital_id = $_POST['hospital_id'] ?? '';
     
     if (!empty($hospital_id)) {
+        // Fetch hospital details for audit logging
+        $hospital_name = 'Unknown';
+        $hospital_location = 'Unknown';
+        $fetch_stmt = $conn->prepare("SELECT Hospital_Name, Location FROM hospital WHERE Hospital_ID = ?");
+        $fetch_stmt->bind_param("i", $hospital_id);
+        $fetch_stmt->execute();
+        $fetch_result = $fetch_stmt->get_result();
+        if ($fetch_result->num_rows > 0) {
+            $hospital_data = $fetch_result->fetch_assoc();
+            $hospital_name = $hospital_data['Hospital_Name'];
+            $hospital_location = $hospital_data['Location'];
+        }
+        $fetch_stmt->close();
+        
         $delete_sql = "DELETE FROM hospital WHERE Hospital_ID = ?";
         $stmt = $conn->prepare($delete_sql);
         $stmt->bind_param("i", $hospital_id);
         
         if ($stmt->execute()) {
             $successMessage = "Hospital deleted successfully.";
+            
+            // Log the hospital deletion activity
+            $details = "Hospital deleted: Name={$hospital_name}, Location={$hospital_location}";
+            log_activity($conn, $_SESSION['username'], 'Staff', 'DELETE', 'Hospital', $hospital_id, $details);
         } else {
             $errorMessage = "Error deleting hospital: " . $stmt->error;
         }
