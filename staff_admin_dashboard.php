@@ -24,7 +24,10 @@ if (isset($_POST['backup_btn'])) {
     if (!file_exists($mysqldump_path)) {
         $mysqldump_path = "E:\\NSU Study\\Xampp\\mysql\\bin\\mysqldump.exe";
     }
-    
+    if (!file_exists($mysqldump_path)) {
+        $mysqldump_path = "D:\\xampp\\mysql\\bin\\mysqldump.exe";
+    }
+
     if ($password === '') {
         $command = "\"{$mysqldump_path}\" --host={$host} --user={$user} {$database} > \"{$filepath}\"";
     } else {
