@@ -2,13 +2,11 @@
 require 'audit_logger.php';
 include 'staff_session_check.php';
 
-// Check if user is an Officer
 if ($_SESSION['role'] !== 'Officer') {
     header("Location: staff_login.php");
     exit();
 }
 
-// Suppress debug output from db_connect.php
 ob_start();
 include 'db_connect.php';
 ob_end_clean();
@@ -16,7 +14,6 @@ ob_end_clean();
 $successMessage = '';
 $errorMessage = '';
 
-// Handle Reject Request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reject_request'])) {
     $request_id = $_POST['request_id'] ?? '';
     
@@ -63,11 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_request'])) {
     $quantity = $_POST['quantity'] ?? 0;
     
     if (!empty($request_id) && !empty($required_blood_group) && $quantity > 0) {
-        // Start transaction
         $conn->begin_transaction();
         
         try {
-            // Check available stock for this blood group
             $check_stock_sql = "SELECT COUNT(*) as available 
                                FROM blood_unit 
                                WHERE Blood_Group = ? AND Status = 'Available'";
@@ -80,9 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_request'])) {
             $stmt->close();
             
             if ($available_units >= $quantity) {
-                // Enough stock - proceed with approval
-                
-                // Fetch hospital name for audit logging
                 $hospital_name = 'Unknown';
                 $fetch_hospital_stmt = $conn->prepare("SELECT h.Hospital_Name FROM request r JOIN hospital h ON r.Hospital_ID = h.Hospital_ID WHERE r.Request_ID = ?");
                 if ($fetch_hospital_stmt) {
@@ -96,18 +88,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_request'])) {
                     $fetch_hospital_stmt->close();
                 }
                 
-                // Update request status to 'Approved'
                 $approve_sql = "UPDATE request SET Status = 'Approved' WHERE Request_ID = ?";
                 $stmt = $conn->prepare($approve_sql);
                 $stmt->bind_param("i", $request_id);
                 $stmt->execute();
                 $stmt->close();
                 
-                // Log request approval activity
                 $approve_details = "Request approved - Hospital: {$hospital_name}, Blood Group: {$required_blood_group}, Quantity: {$quantity}";
                 log_activity($conn, $_SESSION['username'], 'Staff', 'UPDATE', 'Request', $request_id, $approve_details);
                 
-                // Mark the oldest units as 'Used' (FIFO method)
+                // FIFO method: Mark oldest units as Used
                 $update_units_sql = "UPDATE blood_unit 
                                     SET Status = 'Used' 
                                     WHERE Blood_Group = ? AND Status = 'Available' 

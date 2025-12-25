@@ -13,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
     
-    // Connect to DB
     ob_start();
     include 'db_connect.php';
     ob_end_clean();
@@ -21,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($conn instanceof mysqli && !$conn->connect_error) {
         $donor_id = $_SESSION['donor_id'];
         
-        // Fetch donor name for audit logging
         $donor_name = 'Unknown';
         $name_stmt = $conn->prepare("SELECT name FROM Donor WHERE Donor_ID = ?");
         if ($name_stmt) {
@@ -36,13 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if ($field === 'phone') {
-            // Update phone number
             $stmt = $conn->prepare("UPDATE Donor SET Phone_Number = ? WHERE Donor_ID = ?");
             if ($stmt) {
                 $stmt->bind_param("si", $value, $donor_id);
                 if ($stmt->execute()) {
                     $_SESSION['success'] = 'Phone number updated successfully.';
-                    // Log the update activity
                     log_activity($conn, $donor_name, 'Donor', 'UPDATE', 'Donor', $donor_id, 'Phone number updated');
                 } else {
                     $_SESSION['error'] = 'Failed to update phone number: ' . $stmt->error;
@@ -79,5 +75,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: donor_dashboard.php");
     exit();
 }
-?>
 

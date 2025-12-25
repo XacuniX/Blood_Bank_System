@@ -4,20 +4,15 @@ session_start();
 $errorMessage = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get the submitted phone number and password
     $phoneNumber = trim($_POST['phone_number'] ?? '');
-    // Get password directly - don't process it yet (passwords may have spaces)
     $password = $_POST['password'] ?? '';
     
     if (!empty($phoneNumber) && !empty($password)) {
-        // Connect to DB (suppress debug echo from db_connect.php)
         ob_start();
         include 'db_connect.php';
         ob_end_clean();
         
         if ($conn instanceof mysqli && !$conn->connect_error) {
-            // Query to get hospital with matching phone number
-            // Use SELECT * to get all columns and handle any column name case
             $stmt = $conn->prepare("SELECT * FROM Hospital WHERE Phone = ?");
             if ($stmt) {
                 $stmt->bind_param("s", $phoneNumber);
@@ -25,13 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $result = $stmt->get_result();
                 
                 if ($result->num_rows > 0) {
-                    // Hospital exists - get all hospital data
                     $hospital = $result->fetch_assoc();
                     
-                    // Handle different possible column name cases (Password, password, PASSWORD)
-                    // MySQL column names are case-insensitive, but array keys in PHP are case-sensitive
+                    // Handle different password column name cases
                     $storedPassword = null;
-                    // Try common variations
                     foreach (['Password', 'password', 'PASSWORD', 'pass', 'Pass'] as $colName) {
                         if (isset($hospital[$colName])) {
                             $storedPassword = $hospital[$colName];
@@ -39,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                     
-                    // If still not found, check all keys (case-insensitive search)
                     if ($storedPassword === null) {
                         foreach ($hospital as $key => $value) {
                             if (strtolower($key) === 'password') {

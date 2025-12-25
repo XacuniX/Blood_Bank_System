@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// STRICT Access Control - Administrator Only
 if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'Admin') {
     header("Location: staff_login.php");
     exit();
@@ -10,10 +9,8 @@ if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'Admin') {
 require 'db_connect.php';
 include 'includes/header.php';
 
-// Get role filter from GET request
 $role_filter = isset($_GET['role']) ? $_GET['role'] : 'All';
 
-// Build the query based on filter
 if ($role_filter === 'All') {
     $sql = "SELECT * FROM Audit_Log ORDER BY Log_Date DESC";
     $stmt = $conn->prepare($sql);

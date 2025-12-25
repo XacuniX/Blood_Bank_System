@@ -2,13 +2,11 @@
 require 'audit_logger.php';
 include 'staff_session_check.php';
 
-// Check if user is an Officer
 if ($_SESSION['role'] !== 'Officer') {
     header("Location: staff_login.php");
     exit();
 }
 
-// Suppress debug output from db_connect.php
 ob_start();
 include 'db_connect.php';
 ob_end_clean();
@@ -16,14 +14,12 @@ ob_end_clean();
 $successMessage = '';
 $errorMessage = '';
 
-// Handle Add Blood Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
     $donor_id = trim($_POST['donor_id'] ?? '');
     $expiry_date = trim($_POST['expiry_date'] ?? '');
     $quantity = intval($_POST['quantity'] ?? 1);
     
     if (!empty($donor_id) && !empty($expiry_date) && $quantity > 0 && $quantity <= 10) {
-        // Check if Donor_ID exists and get blood group and last donation date
         $check_donor_sql = "SELECT Donor_ID, Blood_Group, Last_Donation_Date FROM donor WHERE Donor_ID = ?";
         $stmt = $conn->prepare($check_donor_sql);
         $stmt->bind_param("i", $donor_id);
@@ -31,12 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
         $result = $stmt->get_result();
         
         if ($result->num_rows > 0) {
-            // Donor exists - get blood group and check eligibility
             $donor = $result->fetch_assoc();
             $blood_group = $donor['Blood_Group'];
             $last_donation = $donor['Last_Donation_Date'];
             
-            // Check if donor is eligible (56 days between donations)
+            // Check donor eligibility (56 days between donations)
             $eligible = true;
             $days_remaining = 0;
             
@@ -55,11 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
                 $next_eligible_date = date('Y-m-d', strtotime($last_donation . ' + 56 days'));
                 $errorMessage = "Donor is not eligible to donate yet. Last donation was on " . date('Y-m-d', strtotime($last_donation)) . ". Next eligible date: $next_eligible_date ($days_remaining days remaining).";
             } else {
-                // Insert new blood units based on quantity
                 $status = 'Available';
                 $staff_id = $_SESSION['staff_id'];
                 
-                // Notice we use the SQL function NOW() instead of a PHP variable (?)
                 $insert_sql = "INSERT INTO blood_unit (Donor_ID, Blood_Group, Expiry_Date, Collection_Date, Status, Staff_ID) 
                               VALUES (?, ?, ?, NOW(), ?, ?)";
                 $insert_stmt = $conn->prepare($insert_sql);
@@ -68,7 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
                     $inserted_units = [];
                     $success_count = 0;
                     
-                    // Loop to insert multiple units
                     for ($i = 0; $i < $quantity; $i++) {
                         $insert_stmt->bind_param("isssi", $donor_id, $blood_group, $expiry_date, $status, $staff_id);
                         
@@ -82,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
                     }
                     
                     if ($success_count > 0) {
-                        // Get donor name for audit logging
                         $donor_name = 'Unknown';
                         $name_stmt = $conn->prepare("SELECT Name FROM donor WHERE Donor_ID = ?");
                         if ($name_stmt) {
@@ -96,7 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
                             $name_stmt->close();
                         }
                         
-                        // Update donor's last donation date
                         $update_donor_sql = "UPDATE donor SET Last_Donation_Date = NOW() WHERE Donor_ID = ?";
                         $update_stmt = $conn->prepare($update_donor_sql);
                         $update_stmt->bind_param("i", $donor_id);
@@ -132,12 +122,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_blood'])) {
     }
 }
 
-// Handle Discard/Delete Action
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_btn'])) {
     $unit_id = $_POST['unit_id'] ?? '';
     
     if (!empty($unit_id)) {
-        // Fetch blood unit details for audit logging
         $blood_group = 'Unknown';
         $donor_id_log = 'Unknown';
         $unit_status = 'Unknown';
@@ -155,7 +143,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_btn'])) {
             $fetch_stmt->close();
         }
         
-        // Delete the blood unit from database
         $delete_sql = "DELETE FROM blood_unit WHERE Unit_ID = ?";
         $stmt = $conn->prepare($delete_sql);
         $stmt->bind_param("i", $unit_id);
@@ -163,7 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_btn'])) {
         if ($stmt->execute()) {
             $successMessage = "Blood unit #$unit_id has been discarded and removed from inventory.";
             
-            // Log blood unit discard activity
             $discard_details = "Blood unit discarded - Unit ID: {$unit_id}, Blood Group: {$blood_group}, Donor ID: {$donor_id_log}, Status: {$unit_status}";
             log_activity($conn, $_SESSION['username'], 'Staff', 'DELETE', 'Blood_Unit', $unit_id, $discard_details);
         } else {
@@ -173,8 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_btn'])) {
     }
 }
 
-// Get all blood units for display (3-TABLE JOIN)
-// This JOIN combines blood_unit, donor, and staff tables to show complete information
+// 3-TABLE JOIN: blood_unit, donor, and staff
 $blood_units_sql = "SELECT bu.Unit_ID, bu.Blood_Group, bu.Donor_ID, bu.Collection_Date, 
                            bu.Expiry_Date, bu.Status, 
                            d.Name as Donor_Name, 
@@ -185,7 +170,7 @@ $blood_units_sql = "SELECT bu.Unit_ID, bu.Blood_Group, bu.Donor_ID, bu.Collectio
                     ORDER BY bu.Expiry_Date ASC";
 $blood_units = $conn->query($blood_units_sql);
 
-// Get inventory statistics using aggregate functions
+// SQL Aggregate Functions
 $stats_sql = "SELECT 
                 COUNT(*) as total_units,
                 SUM(CASE WHEN Status = 'Available' THEN 1 ELSE 0 END) as available_units,
@@ -196,7 +181,7 @@ $stats_sql = "SELECT
 $stats_result = $conn->query($stats_sql);
 $stats = $stats_result->fetch_assoc();
 
-// SINGLE-ROW SUBQUERY: Get average donation count per donor
+// SINGLE-ROW SUBQUERY: Average donations per donor
 $avg_donations_sql = "SELECT 
                         (SELECT AVG(donation_count) 
                          FROM (SELECT Donor_ID, COUNT(*) as donation_count 
@@ -205,7 +190,7 @@ $avg_donations_sql = "SELECT
 $avg_donations_result = $conn->query($avg_donations_sql);
 $avg_donations = $avg_donations_result->fetch_assoc();
 
-// MULTIPLE-ROW SUBQUERY WITH IN: Get donors who have blood units currently available
+// MULTIPLE-ROW SUBQUERY: Donors with available units
 $active_donors_sql = "SELECT d.Donor_ID, d.Name, d.Blood_Group, COUNT(bu.Unit_ID) as available_units
                       FROM donor d
                       INNER JOIN blood_unit bu ON d.Donor_ID = bu.Donor_ID
@@ -216,7 +201,7 @@ $active_donors_sql = "SELECT d.Donor_ID, d.Name, d.Blood_Group, COUNT(bu.Unit_ID
                       LIMIT 5";
 $active_donors_result = $conn->query($active_donors_sql);
 
-// LEFT JOIN: Get donors who haven't donated yet (0 donations)
+// LEFT JOIN: Donors with 0 donations
 $all_donors_sql = "SELECT d.Donor_ID, d.Name, d.Blood_Group, d.Last_Donation_Date,
                           COUNT(bu.Unit_ID) as total_donations
                    FROM donor d

@@ -7,7 +7,6 @@ $successMessage = '';
 $errorMessage = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Pull form data
     $name = trim($_POST['name'] ?? '');
     $age = intval($_POST['age'] ?? 0);
     $gender = $_POST['gender'] ?? '';
@@ -16,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirm_password'] ?? '';
 
-    // Validate password
     if (empty($password)) {
         $errorMessage = "Password is required.";
     } elseif (strlen($password) < 6) {
@@ -24,10 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($password !== $confirmPassword) {
         $errorMessage = "Passwords do not match.";
     } else {
-        // Hash the password before storing
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        // Connect to DB (suppress debug echo from db_connect.php)
         ob_start();
         include 'db_connect.php';
         ob_end_clean();
@@ -39,14 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt->execute()) {
                     $donor_id = $conn->insert_id;
                     
-                    // Log the registration activity
                     log_activity($conn, $name, 'Donor', 'INSERT', 'Donor', $donor_id, 'Self-registration');
                     
-                    // Close connection before redirect
                     $stmt->close();
                     $conn->close();
                     
-                    // Redirect to success page
                     header("Location: donor_registration_success.php");
                     exit();
                 } else {

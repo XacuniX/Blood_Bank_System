@@ -5,18 +5,13 @@ session_start();
 $errorMessage = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get the submitted username and password
     $input_user = trim($_POST['username'] ?? '');
-    // Get password directly - don't process it yet (passwords may have spaces)
     $input_password = $_POST['password'] ?? '';
 
     if (!empty($input_user) && !empty($input_password)) {
-        // Connect to DB
         include 'db_connect.php';
 
         if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
-            // Query to get staff with matching username from database
-            // Note: MySQL table names are case-sensitive on Linux but not on Windows
             $stmt = $conn->prepare("SELECT Staff_ID, Username, Password, Role FROM Staff WHERE Username = ?");
             if ($stmt) {
                 $stmt->bind_param("s", $input_user);
@@ -24,33 +19,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $result = $stmt->get_result();
 
                 if ($result->num_rows > 0) {
-                    // Staff member found in database - get the data
                     $staff = $result->fetch_assoc();
-                    
-                    // Get the stored password from database
                     $storedPassword = $staff['Password'];
 
-                    // Check if password exists in database
                     if (empty($storedPassword)) {
                         $errorMessage = 'Password not set for this account. Please contact administrator.';
                     } else {
-                        // Compare the input password with stored password
                         // Check if password is hashed or plain text
                         if (preg_match('/^\$2[ayb]\$/', $storedPassword)) {
-                            // Password is hashed - use password_verify
                             $passwordMatch = password_verify($input_password, $storedPassword);
                         } else {
-                            // Password is plain text - direct comparison
                             $passwordMatch = ($input_password === $storedPassword);
                         }
 
                         if ($passwordMatch) {
-                            // Login successful - store data in session
                             $_SESSION['staff_id'] = $staff['Staff_ID'];
                             $_SESSION['username'] = $staff['Username'];
                             $_SESSION['role'] = $staff['Role'];
 
-                            // Log the login activity
                             log_activity($conn, $staff['Username'], 'Staff', 'LOGIN', 'Staff', $staff['Staff_ID'], 'User logged in');
 
                             $stmt->close();
@@ -65,17 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             } elseif ($role === 'Admin') {
                                 header("Location: staff_admin_dashboard.php");
                             } else {
-                                // Default fallback if role doesn't match
                                 header("Location: staff_dashboard.php");
                             }
                             exit();
                         } else {
-                            // Wrong password
                             $errorMessage = 'Invalid Username or Password.';
                         }
                     }
                 } else {
-                    // Staff does not exist
                     $errorMessage = 'Invalid Username or Password.';
                 }
                 $stmt->close();
