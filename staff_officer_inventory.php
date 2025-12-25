@@ -216,6 +216,16 @@ $active_donors_sql = "SELECT d.Donor_ID, d.Name, d.Blood_Group, COUNT(bu.Unit_ID
                       LIMIT 5";
 $active_donors_result = $conn->query($active_donors_sql);
 
+// LEFT JOIN: Get donors who haven't donated yet (0 donations)
+$all_donors_sql = "SELECT d.Donor_ID, d.Name, d.Blood_Group, d.Last_Donation_Date,
+                          COUNT(bu.Unit_ID) as total_donations
+                   FROM donor d
+                   LEFT JOIN blood_unit bu ON d.Donor_ID = bu.Donor_ID
+                   GROUP BY d.Donor_ID, d.Name, d.Blood_Group, d.Last_Donation_Date
+                   HAVING total_donations = 0
+                   ORDER BY d.Name ASC";
+$all_donors_result = $conn->query($all_donors_sql);
+
 include 'includes/header.php';
 ?>
 
@@ -314,6 +324,57 @@ include 'includes/header.php';
                             <?php endif; ?>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEFT JOIN Report: All Donors Donation Report -->
+    <div class="row mb-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Donors Without Donations</h5>
+                </div>
+                <div class="card-body">
+                    <?php if ($all_donors_result && $all_donors_result->num_rows > 0): ?>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Donor ID</th>
+                                        <th>Name</th>
+                                        <th>Blood Group</th>
+                                        <th>Total Donations</th>
+                                        <th>Last Donation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php while ($donor = $all_donors_result->fetch_assoc()): ?>
+                                        <tr>
+                                            <td><strong><?php echo htmlspecialchars($donor['Donor_ID']); ?></strong></td>
+                                            <td><?php echo htmlspecialchars($donor['Name']); ?></td>
+                                            <td>
+                                                <span class="badge bg-danger">
+                                                    <?php echo htmlspecialchars($donor['Blood_Group']); ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">No donations yet</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted">Never</span>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-0">No donor records found.</p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
