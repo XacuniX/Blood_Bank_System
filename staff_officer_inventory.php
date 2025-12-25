@@ -179,6 +179,17 @@ $blood_units_sql = "SELECT Unit_ID, Blood_Group, Donor_ID, Collection_Date, Expi
                     ORDER BY Expiry_Date ASC";
 $blood_units = $conn->query($blood_units_sql);
 
+// Get inventory statistics using aggregate functions
+$stats_sql = "SELECT 
+                COUNT(*) as total_units,
+                SUM(CASE WHEN Status = 'Available' THEN 1 ELSE 0 END) as available_units,
+                MIN(Expiry_Date) as earliest_expiry,
+                MAX(Collection_Date) as latest_collection,
+                AVG(DATEDIFF(Expiry_Date, Collection_Date)) as avg_shelf_life_days
+              FROM blood_unit";
+$stats_result = $conn->query($stats_sql);
+$stats = $stats_result->fetch_assoc();
+
 include 'includes/header.php';
 ?>
 
@@ -189,6 +200,45 @@ include 'includes/header.php';
             <a href="staff_officer_dashboard.php" class="btn btn-outline-danger">
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
+        </div>
+    </div>
+
+    <!-- Inventory Statistics (Using SQL Aggregate Functions) -->
+    <div class="row mb-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Inventory Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded bg-light">
+                                <h6 class="text-muted">Total Units</h6>
+                                <h3 class="text-primary mb-0"><?php echo number_format($stats['total_units']); ?></h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded bg-light">
+                                <h6 class="text-muted">Available Units</h6>
+                                <h3 class="text-success mb-0"><?php echo number_format($stats['available_units']); ?></h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded bg-light">
+                                <h6 class="text-muted">Earliest Expiry</h6>
+                                <h3 class="text-warning mb-0"><?php echo $stats['earliest_expiry'] ? date('M d', strtotime($stats['earliest_expiry'])) : 'N/A'; ?></h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded bg-light">
+                                <h6 class="text-muted">Avg Shelf Life</h6>
+                                <h3 class="text-info mb-0"><?php echo $stats['avg_shelf_life_days'] ? round($stats['avg_shelf_life_days']) : 0; ?> days</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
