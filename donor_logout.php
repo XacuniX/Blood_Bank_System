@@ -12,7 +12,7 @@ if (isset($_COOKIE[session_name()])) {
 // Destroy the session
 session_destroy();
 
-// Redirect to home page
-header("Location: index.php");
+// Redirect to donor login page
+header("Location: donor_login.php");
 exit();
 ?>
