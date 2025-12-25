@@ -43,14 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Fetch hospital name for audit logging
         $hospital_name = 'Unknown';
-        $name_stmt = $conn->prepare("SELECT Name FROM Hospital WHERE Hospital_ID = ?");
+        $name_stmt = $conn->prepare("SELECT Hospital_Name FROM Hospital WHERE Hospital_ID = ?");
         if ($name_stmt) {
             $name_stmt->bind_param("i", $hospital_id);
             $name_stmt->execute();
             $name_result = $name_stmt->get_result();
             if ($name_result->num_rows > 0) {
                 $hospital_data = $name_result->fetch_assoc();
-                $hospital_name = $hospital_data['Name'];
+                $hospital_name = $hospital_data['Hospital_Name'];
             }
             $name_stmt->close();
         }

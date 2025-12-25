@@ -77,10 +77,14 @@ $result = $stmt->get_result();
                                     
                                     // Determine action text color
                                     $action_color = '';
+                                    $action_style = '';
                                     if ($row['Action_Type'] === 'DELETE') {
                                         $action_color = 'text-danger fw-bold';
                                     } elseif ($row['Action_Type'] === 'INSERT') {
                                         $action_color = 'text-success fw-bold';
+                                    } elseif ($row['Action_Type'] === 'UPDATE') {
+                                        $action_color = 'fw-bold';
+                                        $action_style = 'color: #ff8800;';
                                     } elseif ($row['Action_Type'] === 'LOGIN') {
                                         $action_color = 'fw-bold';
                                     }
@@ -92,7 +96,7 @@ $result = $stmt->get_result();
                                             echo htmlspecialchars($row['Performed_By']) . ' (' . htmlspecialchars($row['Role']) . ')'; 
                                         ?>
                                     </td>
-                                    <td class="<?php echo $action_color; ?>">
+                                    <td class="<?php echo $action_color; ?>" style="<?php echo $action_style; ?>">
                                         <?php echo htmlspecialchars($row['Action_Type']); ?>
                                     </td>
                                     <td>
