@@ -113,6 +113,10 @@ $stmt->close();
                     <i class="bi bi-person-circle"></i> Your Profile
                 </div>
                 <div class="card-body">
+                    <div class="mb-3 p-2 bg-danger bg-opacity-10 rounded text-center">
+                        <small class="text-muted d-block mb-1">DONOR ID</small>
+                        <h4 class="mb-0 text-danger fw-bold"><?php echo htmlspecialchars($donor_id); ?></h4>
+                    </div>
                     <p class="mb-2"><strong>Blood Group:</strong>
                         <?php echo htmlspecialchars($donor_info['Blood_Group']); ?></p>
                     <p class="mb-2 d-flex justify-content-between align-items-center">
