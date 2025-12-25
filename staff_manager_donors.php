@@ -237,50 +237,50 @@ include 'includes/header.php';
                 <div class="card-header bg-white border-bottom">
                     <h5 class="mb-0 text-danger"><i class="bi bi-table me-2"></i>Registered Donors</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <?php if ($donors && $donors->num_rows > 0): ?>
                         <div class="table-responsive">
-                            <table class="taLast Donation</th>
-                                        <th>ble table-hover">
+                            <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Age</th>
-                                        <th>Gender</th>
-                                        <th>Blood Group</th>
-                                        <th>Phone</th>
-                                        <th>Actions</th>
+                                        <th class="text-center" style="width: 80px;">ID</th>
+                                        <th style="min-width: 150px;">Name</th>
+                                        <th class="text-center" style="width: 80px;">Age</th>
+                                        <th class="text-center" style="width: 100px;">Gender</th>
+                                        <th class="text-center" style="width: 120px;">Blood Group</th>
+                                        <th style="min-width: 130px;">Phone</th>
+                                        <th class="text-center" style="min-width: 140px;">Last Donation</th>
+                                        <th class="text-center" style="min-width: 180px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php while ($row = $donors->fetch_assoc()): ?>
                                         <tr>
-                                            <td><strong><?php echo htmlspecialchars($row['Donor_ID']); ?></strong></td>
+                                            <td class="text-center"><strong class="text-primary"><?php echo htmlspecialchars($row['Donor_ID']); ?></strong></td>
                                             <td><?php echo htmlspecialchars($row['Name']); ?></td>
-                                            <td><?php echo htmlspecialchars($row['Age']); ?></td>
-                                            <td><?php echo htmlspecialchars($row['Gender']); ?></td>
-                                            <td>
-                                                <span class="badge bg-danger">
+                                            <td class="text-center"><?php echo htmlspecialchars($row['Age']); ?></td>
+                                            <td class="text-center"><?php echo htmlspecialchars($row['Gender']); ?></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-danger fs-6 px-3 py-2">
                                                     <?php echo htmlspecialchars($row['Blood_Group']); ?>
                                                 </span>
                                             </td>
                                             <td><?php echo htmlspecialchars($row['Phone_Number']); ?></td>
-                                            <td>
+                                            <td class="text-center">
                                                 <?php if ($row['Last_Donation_Date'] === null): ?>
                                                     <span class="badge bg-warning text-dark">Never Donated</span>
                                                 <?php else: ?>
-                                                    <?php echo date('M d, Y', strtotime($row['Last_Donation_Date'])); ?>
+                                                    <small><?php echo date('M d, Y', strtotime($row['Last_Donation_Date'])); ?></small>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#editModal<?php echo $row['Donor_ID']; ?>">
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-primary me-2" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editModal<?php echo $row['Donor_ID']; ?>">
                                                     <i class="bi bi-pencil me-1"></i>Edit
                                                 </button>
                                                 <form method="POST" action="" style="display: inline;" 
-                                                      onsubmit="return confirm('Are you sure you want to delete this donor? This action cannot be undone.');">
+                                                    onsubmit="return confirm('Are you sure you want to delete this donor? This action cannot be undone.');">
                                                     <input type="hidden" name="donor_id" value="<?php echo $row['Donor_ID']; ?>">
                                                     <button type="submit" name="delete_donor" class="btn btn-sm btn-danger">
                                                         <i class="bi bi-trash me-1"></i>Delete
