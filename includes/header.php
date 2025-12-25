@@ -9,9 +9,33 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body class="d-flex flex-column min-vh-100">
+<?php
+// Determine the home URL based on logged-in user
+$homeUrl = '/bloodbank/index.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (isset($_SESSION['donor_id'])) {
+    $homeUrl = '/bloodbank/donor_dashboard.php';
+} elseif (isset($_SESSION['hospital_id'])) {
+    $homeUrl = '/bloodbank/hospital_dashboard.php';
+} elseif (isset($_SESSION['staff_id'])) {
+    // Redirect to appropriate staff dashboard based on role
+    if (isset($_SESSION['role'])) {
+        if ($_SESSION['role'] === 'Officer') {
+            $homeUrl = '/bloodbank/staff_officer_dashboard.php';
+        } elseif ($_SESSION['role'] === 'Manager') {
+            $homeUrl = '/bloodbank/staff_manager_dashboard.php';
+        } elseif ($_SESSION['role'] === 'Admin') {
+            $homeUrl = '/bloodbank/staff_admin_dashboard.php';
+        }
+    }
+}
+?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
     <div class="container-fluid">
-        <a class="navbar-brand fw-semibold" href="/bloodbank/index.php">Blood Bank</a>
+        <a class="navbar-brand fw-semibold" href="<?php echo $homeUrl; ?>">Blood Bank</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
                 aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>

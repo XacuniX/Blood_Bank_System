@@ -1,4 +1,32 @@
-<?php include 'includes/header.php'; ?>
+<?php 
+// Start session and check if user is logged in
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Redirect logged-in users to their respective dashboards
+if (isset($_SESSION['donor_id'])) {
+    header("Location: donor_dashboard.php");
+    exit();
+} elseif (isset($_SESSION['hospital_id'])) {
+    header("Location: hospital_dashboard.php");
+    exit();
+} elseif (isset($_SESSION['staff_id'])) {
+    // Redirect to appropriate staff dashboard based on role
+    if (isset($_SESSION['role'])) {
+        if ($_SESSION['role'] === 'Officer') {
+            header("Location: staff_officer_dashboard.php");
+        } elseif ($_SESSION['role'] === 'Manager') {
+            header("Location: staff_manager_dashboard.php");
+        } elseif ($_SESSION['role'] === 'Admin') {
+            header("Location: staff_admin_dashboard.php");
+        }
+        exit();
+    }
+}
+
+include 'includes/header.php'; 
+?>
 
 <script>
 // Add login button to navbar only on homepage
