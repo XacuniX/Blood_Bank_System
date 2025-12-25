@@ -72,23 +72,6 @@ include 'includes/header.php';
     <div class="row mb-4">
         <div class="col-lg-10 mx-auto">
             <div class="row g-4">
-                <!-- Hospital Management Card -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-danger h-100">
-                        <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0"><i class="bi bi-hospital me-2"></i>Hospital Management</h5>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <p class="card-text mb-4">Register new hospitals and manage existing hospital records in the blood bank system.</p>
-                            <div class="mt-auto">
-                                <a href="staff_manager_hospitals.php" class="btn btn-danger w-100">
-                                    <i class="bi bi-building-fill-gear me-2"></i>Manage Hospitals
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Donor Management Card -->
                 <div class="col-md-6">
                     <div class="card shadow-sm border-danger h-100">
@@ -100,6 +83,23 @@ include 'includes/header.php';
                             <div class="mt-auto">
                                 <a href="staff_manager_donors.php" class="btn btn-danger w-100">
                                     <i class="bi bi-people-fill me-2"></i>Manage Donors
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hospital Management Card -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-danger h-100">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="bi bi-hospital me-2"></i>Hospital Management</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <p class="card-text mb-4">Register new hospitals and manage existing hospital records in the blood bank system.</p>
+                            <div class="mt-auto">
+                                <a href="staff_manager_hospitals.php" class="btn btn-danger w-100">
+                                    <i class="bi bi-building-fill-gear me-2"></i>Manage Hospitals
                                 </a>
                             </div>
                         </div>

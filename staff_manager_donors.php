@@ -144,13 +144,10 @@ include 'includes/header.php';
 <div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col">
-            <h2 class="text-danger"><i class="bi bi-people-fill me-2"></i>Donor Management</h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="staff_manager_dashboard.php" class="text-danger">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Donors</li>
-                </ol>
-            </nav>
+            <h2 class="text-danger mb-3"><i class="bi bi-people-fill me-2"></i>Donor Management</h2>
+            <a href="staff_manager_dashboard.php" class="btn btn-outline-danger">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
     </div>
 
