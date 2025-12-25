@@ -155,12 +155,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="card-body text-center d-flex flex-column">
                     <p class="text-muted flex-grow-1">Access your donor dashboard, view donation history, and manage
                         your profile.</p>
-                    <div class="d-grid gap-2">
+                    <div class="d-grid">
                         <a href="donor_login.php" class="btn btn-danger btn-lg">
                             <i class="bi bi-box-arrow-in-right"></i> Donor Login
-                        </a>
-                        <a href="donor_register.php" class="btn btn-outline-danger">
-                            <i class="bi bi-person-plus"></i> Register as Donor
                         </a>
                     </div>
                 </div>
@@ -293,6 +290,13 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<!-- Back to Top Button -->
+<div class="text-center py-4">
+    <a href="#top" class="btn btn-danger btn-lg">
+        <i class="bi bi-arrow-up-circle"></i> Back to Top
+    </a>
+</div>
+
 <style>
     .hover-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -301,6 +305,10 @@ document.addEventListener('DOMContentLoaded', function() {
     .hover-card:hover {
         transform: translateY(-10px);
         box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
+    }
+    
+    html {
+        scroll-behavior: smooth;
     }
 </style>
 
