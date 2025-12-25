@@ -186,10 +186,12 @@ include 'includes/header.php';
                     <h5 class="card-title mb-3">
                         <i class="bi bi-file-text-fill"></i> Audit Logs
                     </h5>
-                    <p class="card-text">View system activity logs and monitor user actions.</p>
-                    <a href="staff_admin_audit.php" class="btn btn-warning">
-                        <i class="bi bi-eye-fill"></i> View Audit Logs
-                    </a>
+                    <p class="card-text">View system activity logs and monitor past user actions.</p>
+                    <div class="mt-3">
+                        <a href="staff_admin_audit.php" class="btn btn-warning">
+                            <i class="bi bi-eye-fill"></i> View Audit Logs
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
