@@ -190,6 +190,26 @@ $stats_sql = "SELECT
 $stats_result = $conn->query($stats_sql);
 $stats = $stats_result->fetch_assoc();
 
+// SINGLE-ROW SUBQUERY: Get average donation count per donor
+$avg_donations_sql = "SELECT 
+                        (SELECT AVG(donation_count) 
+                         FROM (SELECT Donor_ID, COUNT(*) as donation_count 
+                               FROM blood_unit 
+                               GROUP BY Donor_ID) as donor_donations) as avg_donations_per_donor";
+$avg_donations_result = $conn->query($avg_donations_sql);
+$avg_donations = $avg_donations_result->fetch_assoc();
+
+// MULTIPLE-ROW SUBQUERY WITH IN: Get donors who have blood units currently available
+$active_donors_sql = "SELECT d.Donor_ID, d.Name, d.Blood_Group, COUNT(bu.Unit_ID) as available_units
+                      FROM donor d
+                      INNER JOIN blood_unit bu ON d.Donor_ID = bu.Donor_ID
+                      WHERE d.Donor_ID IN (SELECT Donor_ID FROM blood_unit WHERE Status = 'Available')
+                      AND bu.Status = 'Available'
+                      GROUP BY d.Donor_ID, d.Name, d.Blood_Group
+                      ORDER BY available_units DESC
+                      LIMIT 5";
+$active_donors_result = $conn->query($active_donors_sql);
+
 include 'includes/header.php';
 ?>
 
@@ -235,6 +255,57 @@ include 'includes/header.php';
                                 <h6 class="text-muted">Avg Shelf Life</h6>
                                 <h3 class="text-info mb-0"><?php echo $stats['avg_shelf_life_days'] ? round($stats['avg_shelf_life_days']) : 0; ?> days</h3>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subquery Statistics Section -->
+    <div class="row mb-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="row">
+                <!-- Single-Row Subquery Result -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-success h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Average Donations</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-center text-center">
+                            <p class="text-muted mb-2">Average donations per donor</p>
+                            <h2 class="text-success mb-0">
+                                <?php echo $avg_donations['avg_donations_per_donor'] ? number_format($avg_donations['avg_donations_per_donor'], 2) : '0.00'; ?>
+                            </h2>
+                            <small class="text-muted">units per donor</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multiple-Row Subquery Result -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-primary h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Top Active Donors</h5>
+                        </div>
+                        <div class="card-body">
+                            <?php if ($active_donors_result && $active_donors_result->num_rows > 0): ?>
+                                <div class="list-group list-group-flush">
+                                    <?php while ($donor = $active_donors_result->fetch_assoc()): ?>
+                                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong><?php echo htmlspecialchars($donor['Name']); ?></strong>
+                                                <span class="badge bg-danger ms-2"><?php echo htmlspecialchars($donor['Blood_Group']); ?></span>
+                                                <br>
+                                                <small class="text-muted">ID: <?php echo htmlspecialchars($donor['Donor_ID']); ?></small>
+                                            </div>
+                                            <span class="badge bg-primary rounded-pill"><?php echo $donor['available_units']; ?> units</span>
+                                        </div>
+                                    <?php endwhile; ?>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-muted text-center mb-0">No active donors found</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
