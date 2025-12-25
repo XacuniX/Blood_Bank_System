@@ -7,79 +7,45 @@ if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'Admin') {
     exit();
 }
 
-// Database Backup Logic
+// Database Backup Logic using mysqldump
 if (isset($_POST['backup_btn'])) {
-    include 'db_connect.php';
+    // Database credentials
+    $host = 'localhost';
+    $user = 'root';
+    $password = '';
+    $database = 'bloodbank';
     
-    if ($conn instanceof mysqli && !$conn->connect_error) {
-        $backup = "";
-        $backup .= "-- Blood Bank Database Backup\n";
-        $backup .= "-- Generated on: " . date('Y-m-d H:i:s') . "\n";
-        $backup .= "-- MySQL Dump\n\n";
-        $backup .= "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
-        $backup .= "SET time_zone = \"+00:00\";\n\n";
-        
-        // Get all tables
-        $tables_result = $conn->query("SHOW TABLES");
-        
-        if ($tables_result) {
-            while ($table_row = $tables_result->fetch_array()) {
-                $table = $table_row[0];
-                
-                $backup .= "\n-- --------------------------------------------------------\n";
-                $backup .= "-- Table structure for table `$table`\n";
-                $backup .= "-- --------------------------------------------------------\n\n";
-                
-                // Drop table if exists
-                $backup .= "DROP TABLE IF EXISTS `$table`;\n";
-                
-                // Get CREATE TABLE statement
-                $create_result = $conn->query("SHOW CREATE TABLE `$table`");
-                if ($create_result) {
-                    $create_row = $create_result->fetch_array();
-                    $backup .= $create_row[1] . ";\n\n";
-                }
-                
-                // Get table data
-                $data_result = $conn->query("SELECT * FROM `$table`");
-                
-                if ($data_result && $data_result->num_rows > 0) {
-                    $backup .= "-- Dumping data for table `$table`\n\n";
-                    
-                    while ($row = $data_result->fetch_assoc()) {
-                        $backup .= "INSERT INTO `$table` VALUES (";
-                        
-                        $values = array();
-                        foreach ($row as $value) {
-                            if ($value === null) {
-                                $values[] = "NULL";
-                            } else {
-                                // Escape special characters for SQL
-                                $value = $conn->real_escape_string($value);
-                                $values[] = "'$value'";
-                            }
-                        }
-                        
-                        $backup .= implode(", ", $values);
-                        $backup .= ");\n";
-                    }
-                    
-                    $backup .= "\n";
-                }
-            }
-        }
-        
-        $conn->close();
-        
-        // Set headers to download the file
-        $filename = "bloodbank_backup_" . date('Y-m-d_H-i-s') . ".sql";
+    $filename = "bloodbank_backup_" . date('Y-m-d_H-i-s') . ".sql";
+    $filepath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $filename;
+    
+    // Build mysqldump command
+    // Try default location first, then custom location
+    $mysqldump_path = "C:\\xampp\\mysql\\bin\\mysqldump.exe";
+    if (!file_exists($mysqldump_path)) {
+        $mysqldump_path = "E:\\NSU Study\\Xampp\\mysql\\bin\\mysqldump.exe";
+    }
+    
+    if ($password === '') {
+        $command = "\"{$mysqldump_path}\" --host={$host} --user={$user} {$database} > \"{$filepath}\"";
+    } else {
+        $command = "\"{$mysqldump_path}\" --host={$host} --user={$user} --password={$password} {$database} > \"{$filepath}\"";
+    }
+    
+    exec($command, $output, $result);
+    
+    if ($result === 0 && file_exists($filepath)) {
+        // Send file to browser for download
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($backup));
+        header('Content-Length: ' . filesize($filepath));
         header('Cache-Control: must-revalidate');
         header('Pragma: public');
-        
-        echo $backup;
+        readfile($filepath);
+        unlink($filepath); // Delete temp file
+        exit();
+    } else {
+        $_SESSION['backup_error'] = "Backup failed. Please ensure mysqldump is accessible.";
+        header("Location: staff_admin_dashboard.php");
         exit();
     }
 }
