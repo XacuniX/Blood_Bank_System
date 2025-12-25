@@ -30,8 +30,11 @@ $result = $stmt->get_result();
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col">
-            <h2><i class="bi bi-file-text"></i> Audit Log</h2>
-            <p class="text-muted">View all system activity logs</p>
+            <h2 class="text-danger mb-2"><i class="bi bi-file-text me-2"></i>Audit Log</h2>
+            <p class="text-muted mb-3">View all system activity logs</p>
+            <a href="staff_admin_dashboard.php" class="btn btn-outline-danger">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
     </div>
 
@@ -115,14 +118,6 @@ $result = $stmt->get_result();
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-        </div>
-    </div>
-
-    <div class="row mt-3">
-        <div class="col">
-            <a href="staff_admin_dashboard.php" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Dashboard
-            </a>
         </div>
     </div>
 </div>

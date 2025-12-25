@@ -127,11 +127,11 @@ include 'includes/header.php';
     <!-- Header with Back Button -->
     <div class="row mb-4">
         <div class="col-12">
-            <a href="staff_admin_dashboard.php" class="btn btn-outline-secondary mb-3">
+            <h2 class="text-danger mb-2"><i class="bi bi-people-fill me-2"></i>User Management</h2>
+            <p class="text-muted mb-3">Add new staff members and manage existing users</p>
+            <a href="staff_admin_dashboard.php" class="btn btn-outline-danger">
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
-            <h2 class="mb-0">User Management</h2>
-            <p class="text-muted">Add new staff members and manage existing users</p>
         </div>
     </div>
 
