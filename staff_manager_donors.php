@@ -103,9 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_donor'])) {
 // Handle Search
 $search_name = $_GET['search_name'] ?? '';
 $search_blood_group = $_GET['search_blood_group'] ?? '';
+$show_never_donated = $_GET['never_donated'] ?? '';
 
 // Build query with search filters
-$donors_sql = "SELECT Donor_ID, Name, Age, Gender, Blood_Group, Phone_Number FROM donor WHERE 1=1";
+$donors_sql = "SELECT Donor_ID, Name, Age, Gender, Blood_Group, Phone_Number, Last_Donation_Date FROM donor WHERE 1=1";
 $params = [];
 $types = "";
 
@@ -119,6 +120,11 @@ if (!empty($search_blood_group)) {
     $donors_sql .= " AND Blood_Group = ?";
     $params[] = $search_blood_group;
     $types .= "s";
+}
+
+// Filter for donors who never donated (IS NULL feature)
+if ($show_never_donated === '1') {
+    $donors_sql .= " AND Last_Donation_Date IS NULL";
 }
 
 $donors_sql .= " ORDER BY Name ASC";
@@ -200,6 +206,15 @@ include 'includes/header.php';
                                     <option value="O-" <?php echo $search_blood_group === 'O-' ? 'selected' : ''; ?>>O-</option>
                                 </select>
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Filter Options</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="never_donated" value="1" id="neverDonated" <?php echo $show_never_donated === '1' ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="neverDonated">
+                                        <i class="bi bi-funnel"></i> Show only donors who never donated
+                                    </label>
+                                </div>
+                            </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-danger">
                                     <i class="bi bi-search me-2"></i>Search
@@ -225,7 +240,8 @@ include 'includes/header.php';
                 <div class="card-body">
                     <?php if ($donors && $donors->num_rows > 0): ?>
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="taLast Donation</th>
+                                        <th>ble table-hover">
                                 <thead class="table-light">
                                     <tr>
                                         <th>ID</th>
@@ -250,6 +266,13 @@ include 'includes/header.php';
                                                 </span>
                                             </td>
                                             <td><?php echo htmlspecialchars($row['Phone_Number']); ?></td>
+                                            <td>
+                                                <?php if ($row['Last_Donation_Date'] === null): ?>
+                                                    <span class="badge bg-warning text-dark">Never Donated</span>
+                                                <?php else: ?>
+                                                    <?php echo date('M d, Y', strtotime($row['Last_Donation_Date'])); ?>
+                                                <?php endif; ?>
+                                            </td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-outline-primary" 
                                                         data-bs-toggle="modal" 
