@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include 'includes/header.php';
 ?>
 
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row justify-content-center">
         <div class="col-lg-5 col-md-7">
             <?php if (!empty($errorMessage)) : ?>
@@ -117,8 +117,8 @@ include 'includes/header.php';
                 </div>
             <?php endif; ?>
 
-            <div class="card shadow-sm">
-                <div class="card-body">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
                     <div class="text-center mb-4">
                         <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle" style="width: 80px; height: 80px;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#dc3545" class="bi bi-heart-pulse" viewBox="0 0 16 16">
@@ -127,21 +127,48 @@ include 'includes/header.php';
                             </svg>
                         </div>
                     </div>
-                    <h3 class="card-title mb-4 text-center">Donor Login</h3>
+                    <h3 class="card-title mb-2 text-center fw-bold">Donor Login</h3>
+                    <p class="text-center text-muted mb-4">Welcome back! Please login to your account</p>
+                    
                     <form method="post" action="">
                         <div class="mb-3">
-                            <label for="phone_number" class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                            <label for="phone_number" class="form-label fw-semibold">Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-telephone-fill text-danger"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="phone_number" name="phone_number" placeholder="Enter your phone number" required>
+                            </div>
                         </div>
                         <div class="mb-4">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <label for="password" class="form-label fw-semibold">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-lock-fill text-danger"></i>
+                                </span>
+                                <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" placeholder="Enter your password" required>
+                            </div>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-danger">Login</button>
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-danger btn-lg py-2">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </button>
                         </div>
                     </form>
+                    
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted mb-2">Don't have an account?</p>
+                        <a href="donor_register.php" class="btn btn-outline-danger">
+                            <i class="bi bi-person-plus"></i> Register as Donor
+                        </a>
+                    </div>
                 </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <a href="index.php" class="text-muted text-decoration-none">
+                    <i class="bi bi-arrow-left"></i> Back to Home
+                </a>
             </div>
         </div>
     </div>

@@ -1,5 +1,18 @@
 <?php include 'includes/header.php'; ?>
 
+<script>
+// Add login button to navbar only on homepage
+document.addEventListener('DOMContentLoaded', function() {
+    const navbarNav = document.querySelector('#mainNavbar .navbar-nav');
+    if (navbarNav) {
+        const loginItem = document.createElement('li');
+        loginItem.className = 'nav-item';
+        loginItem.innerHTML = '<a class="nav-link fw-semibold text-white" href="#portals"><i class="bi bi-box-arrow-in-right"></i> Login</a>';
+        navbarNav.appendChild(loginItem);
+    }
+});
+</script>
+
 <!-- Hero Section -->
 <div class="bg-danger text-white py-5">
     <div class="container">
@@ -64,38 +77,35 @@
     </div>
 </div>
 
-<!-- Services Section -->
+<!-- Why Donate Section -->
 <div class="bg-light py-5" id="services">
     <div class="container">
-        <h2 class="text-center mb-5 display-5 fw-bold">Our Services</h2>
+        <h2 class="text-center mb-5 display-5 fw-bold">Why Donate Blood?</h2>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body text-center p-4">
-                        <i class="bi bi-person-plus-fill text-danger" style="font-size: 3.5rem;"></i>
-                        <h4 class="mt-3">Donor Registration</h4>
-                        <p class="text-muted">Register as a blood donor and save lives in your community.</p>
-                        <a href="donor_register.php" class="btn btn-outline-danger">Register Now</a>
+                        <i class="bi bi-heart-pulse-fill text-danger" style="font-size: 3.5rem;"></i>
+                        <h4 class="mt-3">Save Lives</h4>
+                        <p class="text-muted">One blood donation can save up to three lives. Be someone's hero today.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body text-center p-4">
-                        <i class="bi bi-search text-danger" style="font-size: 3.5rem;"></i>
-                        <h4 class="mt-3">Find Donors</h4>
-                        <p class="text-muted">Search for available blood donors by blood group and location.</p>
-                        <a href="donor_search.php" class="btn btn-outline-danger">Search Donors</a>
+                        <i class="bi bi-shield-fill-check text-danger" style="font-size: 3.5rem;"></i>
+                        <h4 class="mt-3">Safe Process</h4>
+                        <p class="text-muted">All donations are conducted with sterile equipment in a safe, monitored environment.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card border-0 shadow h-100">
                     <div class="card-body text-center p-4">
-                        <i class="bi bi-box-seam text-danger" style="font-size: 3.5rem;"></i>
-                        <h4 class="mt-3">Blood Inventory</h4>
-                        <p class="text-muted">Check current blood stock availability by blood group.</p>
-                        <a href="inventory.php" class="btn btn-outline-danger">View Inventory</a>
+                        <i class="bi bi-people-fill text-danger" style="font-size: 3.5rem;"></i>
+                        <h4 class="mt-3">Join Community</h4>
+                        <p class="text-muted">Become part of a community of lifesavers making a difference every day.</p>
                     </div>
                 </div>
             </div>
@@ -104,7 +114,7 @@
 </div>
 
 <!-- Portal Access Section -->
-<div class="container my-5">
+<div class="container my-5" id="portals">
     <h2 class="text-center mb-5 display-5 fw-bold">Access Portals</h2>
     <div class="row g-4 justify-content-center">
         <!-- Donor Portal -->
@@ -137,14 +147,10 @@
                     <h3 class="mt-3 mb-0">Hospital Portal</h3>
                 </div>
                 <div class="card-body text-center d-flex flex-column">
-                    <p class="text-muted flex-grow-1">Request blood units, search inventory, and manage hospital blood
-                        requests.</p>
-                    <div class="d-grid gap-2">
+                    <p class="text-muted flex-grow-1">Request blood units, manage blood requests, and access hospital dashboard for efficient blood management.</p>
+                    <div class="d-grid">
                         <a href="hospital_login.php" class="btn btn-primary btn-lg">
                             <i class="bi bi-box-arrow-in-right"></i> Hospital Login
-                        </a>
-                        <a href="hospital_search.php" class="btn btn-outline-primary">
-                            <i class="bi bi-search"></i> Search Blood
                         </a>
                     </div>
                 </div>
@@ -159,14 +165,10 @@
                     <h3 class="mt-3 mb-0">Staff Portal</h3>
                 </div>
                 <div class="card-body text-center d-flex flex-column">
-                    <p class="text-muted flex-grow-1">Manage blood inventory, process requests, and oversee blood bank
-                        operations.</p>
-                    <div class="d-grid gap-2">
+                    <p class="text-muted flex-grow-1">Manage blood inventory, process requests, oversee operations, and maintain blood bank records efficiently.</p>
+                    <div class="d-grid">
                         <a href="staff_login.php" class="btn btn-dark btn-lg">
                             <i class="bi bi-box-arrow-in-right"></i> Staff Login
-                        </a>
-                        <a href="inventory.php" class="btn btn-outline-dark">
-                            <i class="bi bi-clipboard-data"></i> View Reports
                         </a>
                     </div>
                 </div>
@@ -242,20 +244,22 @@
 </div>
 
 <!-- Call to Action Section -->
-<div class="container my-5 py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8 text-center">
-            <h2 class="display-4 fw-bold mb-4">Ready to Save Lives?</h2>
-            <p class="lead text-muted mb-4">
-                Your blood donation can save up to three lives. Join our community of heroes today.
-            </p>
-            <div class="d-flex gap-3 justify-content-center flex-wrap">
-                <a href="donor_register.php" class="btn btn-danger btn-lg px-5">
-                    <i class="bi bi-heart-fill"></i> Register Now
-                </a>
-                <a href="donor_search.php" class="btn btn-outline-danger btn-lg px-5">
-                    <i class="bi bi-search"></i> Find Donors
-                </a>
+<div class="bg-danger text-white py-5">
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="display-4 fw-bold mb-4">Ready to Save Lives?</h2>
+                <p class="lead mb-4">
+                    Your blood donation can save up to three lives. Join our community of heroes today and make a lasting impact.
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="donor_register.php" class="btn btn-light btn-lg px-5">
+                        <i class="bi bi-heart-fill"></i> Register as Donor
+                    </a>
+                    <a href="donor_login.php" class="btn btn-outline-light btn-lg px-5">
+                        <i class="bi bi-box-arrow-in-right"></i> Donor Login
+                    </a>
+                </div>
             </div>
         </div>
     </div>
