@@ -173,10 +173,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['discard_btn'])) {
     }
 }
 
-// Get all blood units for display
-$blood_units_sql = "SELECT Unit_ID, Blood_Group, Donor_ID, Collection_Date, Expiry_Date, Status 
-                    FROM blood_unit 
-                    ORDER BY Expiry_Date ASC";
+// Get all blood units for display (3-TABLE JOIN)
+// This JOIN combines blood_unit, donor, and staff tables to show complete information
+$blood_units_sql = "SELECT bu.Unit_ID, bu.Blood_Group, bu.Donor_ID, bu.Collection_Date, 
+                           bu.Expiry_Date, bu.Status, 
+                           d.Name as Donor_Name, 
+                           s.Username as Staff_Username
+                    FROM blood_unit bu
+                    INNER JOIN donor d ON bu.Donor_ID = d.Donor_ID
+                    INNER JOIN staff s ON bu.Staff_ID = s.Staff_ID
+                    ORDER BY bu.Expiry_Date ASC";
 $blood_units = $conn->query($blood_units_sql);
 
 // Get inventory statistics using aggregate functions
@@ -397,7 +403,8 @@ include 'includes/header.php';
                                     <tr>
                                         <th>Unit ID</th>
                                         <th>Blood Group</th>
-                                        <th>Donor ID</th>
+                                        <th>Donor Name</th>
+                                        <th>Collected By</th>
                                         <th>Collection Date</th>
                                         <th>Expiry Date</th>
                                         <th>Status</th>
@@ -413,7 +420,13 @@ include 'includes/header.php';
                                                     <?php echo htmlspecialchars($row['Blood_Group']); ?>
                                                 </span>
                                             </td>
-                                            <td><?php echo htmlspecialchars($row['Donor_ID']); ?></td>
+                                            <td>
+                                                <strong><?php echo htmlspecialchars($row['Donor_Name']); ?></strong>
+                                                <br><small class="text-muted">ID: <?php echo htmlspecialchars($row['Donor_ID']); ?></small>
+                                            </td>
+                                            <td>
+                                                <small><?php echo htmlspecialchars($row['Staff_Username']); ?></small>
+                                            </td>
                                             <td><?php echo htmlspecialchars($row['Collection_Date'] ?? 'N/A'); ?></td>
                                             <td><?php echo htmlspecialchars($row['Expiry_Date']); ?></td>
                                             <td>
